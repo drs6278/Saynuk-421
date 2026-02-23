@@ -5,15 +5,14 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 
-// MongoDB Connection
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB via Compass URI'))
   .catch(err => console.error('Could not connect to MongoDB:', err));
 
-// Order Schema
+
 const orderSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   item: { type: String, required: true },
@@ -23,17 +22,17 @@ const orderSchema = new mongoose.Schema({
 
 const Order = mongoose.model('Order', orderSchema);
 
-// Utility function for a simulated delay
+
 const simulateProcessingDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- API ENDPOINTS ---
+// api endpoints
 
-// 1. Create Order (POST) - Includes async simulation
+
 app.post('/orders', async (req, res) => {
   try {
     const { customerName, item, amount } = req.body;
     
-    // Simulating an asynchronous operation (e.g., order processing delay)
+    
     console.log("Processing order...");
     await simulateProcessingDelay(2000); 
 
@@ -46,7 +45,7 @@ app.post('/orders', async (req, res) => {
   }
 });
 
-// 2. Get All Orders (GET)
+
 app.get('/orders', async (req, res) => {
   try {
     const orders = await Order.find();
@@ -56,7 +55,7 @@ app.get('/orders', async (req, res) => {
   }
 });
 
-// 3. Get Specific Order (GET)
+
 app.get('/orders/:id', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -67,7 +66,6 @@ app.get('/orders/:id', async (req, res) => {
   }
 });
 
-// 4. Update Order Status (PATCH)
 app.patch('/orders/:id', async (req, res) => {
   try {
     const { status } = req.body;
@@ -83,7 +81,6 @@ app.patch('/orders/:id', async (req, res) => {
   }
 });
 
-// 5. Delete/Cancel Order (DELETE)
 app.delete('/orders/:id', async (req, res) => {
   try {
     const deletedOrder = await Order.findByIdAndDelete(req.params.id);
@@ -94,7 +91,6 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
