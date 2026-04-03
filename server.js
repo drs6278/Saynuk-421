@@ -48,7 +48,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./server.js'], // Files containing annotations
+  apis: ['./server.js'], 
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
