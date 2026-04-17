@@ -55,7 +55,8 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 
-const MONGODB_URI = 'mongodb+srv://netcentric-user:<db_password>@net-centric-saynuk.odkiort.mongodb.net/?appName=Net-Centric-Saynuk';
+
+const MONGODB_URI = `mongodb+srv://netcentric-user:${process.env.DB_PASSWORD}@net-centric-saynuk.odkiort.mongodb.net/?appName=Net-Centric-Saynuk`;
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB:', err));
