@@ -54,13 +54,6 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// --- Database Connection ---
-const MONGODB_URI = `mongodb+srv://netcentric-user:${process.env.DB_PASSWORD}@net-centric-saynuk.odkiort.mongodb.net/?appName=Net-Centric-Saynuk`;
-
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('Could not connect to MongoDB:', err));
-
 // --- Models ---
 const Order = mongoose.model('Order', new mongoose.Schema({
   customerName: { type: String, required: true },
@@ -77,6 +70,8 @@ const Customer = mongoose.model('Customer', new mongoose.Schema({
 }));
 
 const simulateProcessingDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// --- Routes ---
 
 /**
  * @openapi
@@ -237,7 +232,24 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// --- Start Server ---
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// --- Startup (FIXED) ---
+const MONGODB_URI = `mongodb+srv://netcentric-user:${process.env.DB_PASSWORD}@net-centric-saynuk.odkiort.mongodb.net/?appName=Net-Centric-Saynuk`;
+
+async function startServer() {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB Atlas');
+
+    console.log("PORT VALUE:", process.env.PORT); // debug
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.error('Startup failed:', err);
+    process.exit(1);
+  }
+}
+
+startServer();
