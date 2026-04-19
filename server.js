@@ -77,7 +77,7 @@ const Customer = mongoose.model('Customer', new mongoose.Schema({
 
 const simulateProcessingDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- API Endpoints with Fixed JSDoc Indentation ---
+// --- API Endpoints with Correct YAML Indentation ---
 
 /**
  * @openapi
@@ -234,62 +234,7 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// --- Customer Endpoints ---
-
-/**
- * @openapi
- * /customers:
- * post:
- * summary: Create a new customer
- * tags: [Customers]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * required:
- * - name
- * - email
- * properties:
- * name:
- * type: string
- * email:
- * type: string
- * responses:
- * 201:
- * description: Customer created
- */
-app.post('/customers', async (req, res) => {
-  try {
-    const newCustomer = new Customer(req.body);
-    const savedCustomer = await newCustomer.save();
-    res.status(201).json(savedCustomer);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-/**
- * @openapi
- * /customers:
- * get:
- * summary: Retrieve all customers
- * tags: [Customers]
- * responses:
- * 200:
- * description: List of customers
- */
-app.get('/customers', async (req, res) => {
-  try {
-    const customers = await Customer.find();
-    res.json(customers);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// --- Start Server (Binding to 0.0.0.0 for Render) ---
+// --- Start Server ---
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
