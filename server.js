@@ -5,19 +5,18 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
-// Render automatically assigns a PORT; locally it defaults to 3000
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// --- Swagger Configuration (Kept) ---
+// --- Swagger Configuration ---
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
       title: 'Ordering System API',
       version: '1.0.0',
-      description: 'this is the swaggger ui for a business ordering system',
+      description: 'This is the swagger UI for a business ordering system',
     },
     components: {
       schemas: {
@@ -45,12 +44,11 @@ const swaggerOptions = {
     },
     servers: [
       {
-        // This allows Swagger to work on Render AND locally
         url: process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`,
       },
     ],
   },
-  apis: ['./server.js'], // Ensure this matches your filename
+  apis: ['./server.js'], 
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
@@ -62,28 +60,24 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB:', err));
 
-// --- Schemas & Models ---
-const orderSchema = new mongoose.Schema({
+// --- Models ---
+const Order = mongoose.model('Order', new mongoose.Schema({
   customerName: { type: String, required: true },
   item: { type: String, required: true },
   amount: { type: Number, required: true },
   status: { type: String, default: 'PENDING' }
-});
+}));
 
-const Order = mongoose.model('Order', orderSchema);
-
-const customerSchema = new mongoose.Schema({
+const Customer = mongoose.model('Customer', new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   address: { type: String, required: true }
-});
-
-const Customer = mongoose.model('Customer', customerSchema);
+}));
 
 const simulateProcessingDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- API Endpoints ---
+// --- API Endpoints with Fixed JSDoc Indentation ---
 
 /**
  * @openapi
@@ -117,9 +111,7 @@ const simulateProcessingDelay = (ms) => new Promise(resolve => setTimeout(resolv
 app.post('/orders', async (req, res) => {
   try {
     const { customerName, item, amount } = req.body;
-    console.log("Processing order...");
     await simulateProcessingDelay(2000); 
-
     const newOrder = new Order({ customerName, item, amount });
     const savedOrder = await newOrder.save();
     res.status(201).json({ message: "Order created successfully", order: savedOrder });
@@ -143,8 +135,6 @@ app.post('/orders', async (req, res) => {
  * type: array
  * items:
  * $ref: '#/components/schemas/Order'
- * 500:
- * description: Internal server error
  */
 app.get('/orders', async (req, res) => {
   try {
@@ -167,14 +157,11 @@ app.get('/orders', async (req, res) => {
  * required: true
  * schema:
  * type: string
- * description: The order ID
  * responses:
  * 200:
  * description: Order found
  * 404:
  * description: Order not found
- * 400:
- * description: Invalid ID format
  */
 app.get('/orders/:id', async (req, res) => {
   try {
@@ -198,7 +185,6 @@ app.get('/orders/:id', async (req, res) => {
  * required: true
  * schema:
  * type: string
- * description: The order ID
  * requestBody:
  * required: true
  * content:
@@ -211,15 +197,10 @@ app.get('/orders/:id', async (req, res) => {
  * responses:
  * 200:
  * description: Order updated
- * 404:
- * description: Order not found
- * 400:
- * description: Bad request
  */
 app.patch('/orders/:id', async (req, res) => {
   try {
-    const { status } = req.body;
-    const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
     if (!updatedOrder) return res.status(404).json({ error: "Order not found" });
     res.json({ message: "Order updated", order: updatedOrder });
   } catch (error) {
@@ -239,14 +220,9 @@ app.patch('/orders/:id', async (req, res) => {
  * required: true
  * schema:
  * type: string
- * description: The order ID
  * responses:
  * 200:
  * description: Order deleted
- * 404:
- * description: Order not found
- * 400:
- * description: Bad request
  */
 app.delete('/orders/:id', async (req, res) => {
   try {
@@ -258,7 +234,7 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// Customer API endpoints
+// --- Customer Endpoints ---
 
 /**
  * @openapi
@@ -275,27 +251,20 @@ app.delete('/orders/:id', async (req, res) => {
  * required:
  * - name
  * - email
- * - phone
- * - address
  * properties:
  * name:
  * type: string
  * email:
  * type: string
- * phone:
- * type: string
- * address:
- * type: string
  * responses:
  * 201:
- * description: Customer created successfully
+ * description: Customer created
  */
 app.post('/customers', async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
-    const newCustomer = new Customer({ name, email, phone, address });
+    const newCustomer = new Customer(req.body);
     const savedCustomer = await newCustomer.save();
-    res.status(201).json({ message: "Customer created successfully", customer: savedCustomer });
+    res.status(201).json(savedCustomer);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -305,11 +274,11 @@ app.post('/customers', async (req, res) => {
  * @openapi
  * /customers:
  * get:
- * summary: Retrieve a list of customers
+ * summary: Retrieve all customers
  * tags: [Customers]
  * responses:
  * 200:
- * description: A list of customers
+ * description: List of customers
  */
 app.get('/customers', async (req, res) => {
   try {
@@ -320,86 +289,7 @@ app.get('/customers', async (req, res) => {
   }
 });
 
-/**
- * @openapi
- * /customers/{id}:
- * get:
- * summary: Get a customer by ID
- * tags: [Customers]
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: string
- * responses:
- * 200:
- * description: Customer found
- */
-app.get('/customers/:id', async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) return res.status(404).json({ error: "Customer not found" });
-    res.json(customer);
-  } catch (error) {
-    res.status(400).json({ error: "Invalid ID format" });
-  }
-});
-
-/**
- * @openapi
- * /customers/{id}:
- * patch:
- * summary: Update a customer's information
- * tags: [Customers]
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: string
- * responses:
- * 200:
- * description: Customer updated
- */
-app.patch('/customers/:id', async (req, res) => {
-  try {
-    const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedCustomer) return res.status(404).json({ error: "Customer not found" });
-    res.json({ message: "Customer updated", customer: updatedCustomer });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-/**
- * @openapi
- * /customers/{id}:
- * delete:
- * summary: Delete a customer
- * tags: [Customers]
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: string
- * responses:
- * 200:
- * description: Customer deleted
- */
-app.delete('/customers/:id', async (req, res) => {
-  try {
-    const deletedCustomer = await Customer.findByIdAndDelete(req.params.id);
-    if (!deletedCustomer) return res.status(404).json({ error: "Customer not found" });
-    res.json({ message: "Customer deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// --- Final Start Server Fix ---
-// Only ONE listen call. Added '0.0.0.0' for Render.
+// --- Start Server (Binding to 0.0.0.0 for Render) ---
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
